@@ -122,6 +122,18 @@ docker compose --env-file custom.env -p frappe \
 
 ---
 
+Start (but it doesnot have site that should be running )
+
+```
+docker compose -p frappe -f compose.custom.yaml up -d
+```
+
+See the Container
+```
+docker compose -p frappe -f compose.custom.yaml ps
+```
+
+
 ## Offline Server Setup
 
 Deploy on a server connected via SSH without internet access.

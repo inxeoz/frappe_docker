@@ -186,6 +186,14 @@ docker load -i frappe-images.tar
 cd /home/user/frappe
 docker compose -p frappe -f compose.custom.yaml up -d
 ```
+use these options as required 
+
+```
+--pull never          # Never pull, use local only
+--no-pull             # Skip pull phase entirely
+--build no-cache      # Build without cache pulls
+docker build --no-cache --pull never .
+```
 
 4. **Create site:**
 

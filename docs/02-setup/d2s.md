@@ -140,15 +140,27 @@ Deploy on a server connected via SSH without internet access.
 
 ### On Machine with Internet
 
-1. **Build and save images:**
+1. **Check running images:**
 
 ```bash
+docker compose -p frappe -f compose.custom.yaml ps
+```
+
+| Service | Image |
+|---------|-------|
+| backend, frontend, etc. | custom:15 |
+| db | mariadb:11.8 |
+| redis-cache, redis-queue | redis:6.2-alpine |
+
+2. **Save images:**
+
+```bash
+
+
 docker save -o frappe-images.tar \
   custom:15 \
-  mariadb:10.11 \
-  redis:alpine \
-  nginx:alpine \
-  node:18-alpine
+  mariadb:11.8 \
+  redis:6.2-alpine
 ```
 
 2. **Transfer to server:**

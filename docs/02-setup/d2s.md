@@ -73,7 +73,12 @@ Open browser: `http://localhost:8080`
 
 Try Curl
 ```
-curl --resolve frontend.local:8080:127.0.0.1 http://frontend.local:8080
+curl --resolve SITE_NAME:8080:127.0.0.1 http://SITE_NAME:8080
+```
+example 
+
+```
+curl --resolve frontend.local:8080:127.0.0.1 http://frontend.local:808
 ```
 
 ---

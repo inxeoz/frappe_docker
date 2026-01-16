@@ -69,11 +69,11 @@ docker compose -p frappe exec backend bench new-site <sitename> \
 
 ## 8. Access Site
 
-Open browser: `http://localhost:8080`
+Open browser: `http://localhost:PORT_NUMBER`
 
 Try Curl
 ```
-curl --resolve SITE_NAME:8080:127.0.0.1 http://SITE_NAME:8080
+curl --resolve SITE_NAME:PORT_NUMBER:127.0.0.1 http://SITE_NAME:PORT_NUMBER
 ```
 example 
 

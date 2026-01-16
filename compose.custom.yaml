@@ -207,7 +207,7 @@ services:
       traefik.http.middlewares.dashboard-auth.basicauth.users: admin:$$2y$$10$$T90FCW6HC6q7VMxpCiHOFO/Jo9Wms1nrozNkxJOH72Z9p0o0yp6Yi
       traefik.http.routers.traefik.entrypoints: web
       traefik.http.routers.traefik.middlewares: dashboard-auth
-      traefik.http.routers.traefik.rule: Host(`traefik.localhost`)
+      traefik.http.routers.traefik.rule: Host(`dashboard.localhost`)
       traefik.http.routers.traefik.service: api@internal
     networks:
       traefik-public: null

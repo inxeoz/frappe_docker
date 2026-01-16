@@ -27,9 +27,15 @@ This will create 3 backend containers.
 docker compose --env-file custom.env -p frappe \
   -f compose.yaml \
   -f overrides/compose.proxy.yaml \
-  -f overrides/compose.https.yaml \
+  -f overrides/compose.mariadb.yaml \
+  -f overrides/compose.redis.yaml \
   config > compose.custom.yaml
 ```
+i think 
+```
+  -f overrides/compose.https.yaml \
+```
+for https not for http
 
 ---
 

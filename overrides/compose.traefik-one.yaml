@@ -1,0 +1,47 @@
+services:
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    restart: unless-stopped
+
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --api.dashboard=true
+      - --api.insecure=false
+      - --accesslog=true
+      - --log.level=INFO
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    networks:
+      - traefik-public
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.localhost`)
+      - traefik.http.routers.traefik.entrypoints=web
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.middlewares=dashboard-auth
+      - traefik.http.middlewares.dashboard-auth.basicauth.users=admin:${HASHED_PASSWORD}
+
+  frontend:
+    networks:
+      - default
+      - traefik-public
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frappe.rule=HostRegexp(`{site:.+}`)
+      - traefik.http.routers.frappe.entrypoints=web
+      - traefik.http.services.frappe.loadbalancer.server.port=8080
+      - traefik.docker.network=traefik-public
+
+networks:
+  traefik-public:
+    name: traefik-public
+    driver: bridge

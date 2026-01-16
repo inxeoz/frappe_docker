@@ -1,6 +1,6 @@
 docker compose -p frappe -f compose.custom.yaml down -v
 
-docker compose --env-file custom.env -p frappe   -f compose.yaml   -f overrides/compose.proxy.yaml   -f overrides/compose.mariadb.yaml   -f overrides/compose.redis.yaml   config > compose.custom.yaml
+docker compose --env-file custom.env -p frappe   -f compose.yaml   -f overrides/compose.traefik-one.yaml   -f overrides/compose.mariadb.yaml   -f overrides/compose.redis.yaml   config > compose.custom.yaml
 
 docker compose -p frappe -f compose.custom.yaml up -d --scale backend=2 --scale redis-queue=2
 

@@ -80,6 +80,19 @@ example
 ```
 curl --resolve frontend.local:8080:127.0.0.1 http://frontend.local:808
 ```
+Access using direct SITE_NAME:PORT
+for that point resolve to 127.0.0.1
+
+add ``127.0.0.1 SITE_NAME`` to /etc/hosts
+
+example
+
+``
+127.0.0.1        localhost
+::1              localhost
+127.0.0.1 SITE_NAME
+
+``
 
 ---
 

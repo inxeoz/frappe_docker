@@ -78,7 +78,7 @@ curl --resolve SITE_NAME:PORT_NUMBER:127.0.0.1 http://SITE_NAME:PORT_NUMBER
 example 
 
 ```
-curl --resolve frontend.local:8080:127.0.0.1 http://frontend.local:808
+curl --resolve frontend.local:8080:127.0.0.1 http://frontend.local:8080
 ```
 Access using direct SITE_NAME:PORT
 for that point resolve to 127.0.0.1

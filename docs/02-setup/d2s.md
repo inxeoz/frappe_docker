@@ -71,6 +71,11 @@ docker compose -p frappe exec backend bench new-site <sitename> \
 
 Open browser: `http://localhost:8080`
 
+Try Curl
+```
+curl --resolve frontend.local:8080:127.0.0.1 http://frontend.local:8080
+```
+
 ---
 
 ## Overrides

@@ -214,7 +214,7 @@ services:
     ports:
       - mode: ingress
         target: 80
-        published: "80"
+        published: "8100"
         protocol: tcp
     restart: unless-stopped
     volumes:

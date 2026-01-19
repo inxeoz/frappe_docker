@@ -177,12 +177,12 @@ docker compose -p frappe -f compose.custom.yaml ps
 2. **Save images:**
 
 ```bash
-
-
 docker save -o frappe-images.tar \
   custom:15 \
   mariadb:11.8 \
-  redis:6.2-alpine
+  redis:6.2-alpine \
+  traefik:v2.11
+
 ```
 
 2. **Transfer to server:**

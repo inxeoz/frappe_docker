@@ -59,6 +59,15 @@ docker compose --env-file custom.env -p frappe \
 ```bash
 docker compose -p frappe -f compose.custom.yaml up -d
 ```
+use these options as required 
+
+```
+--pull never          # Never pull, use local only
+--no-pull             # Skip pull phase entirely
+--build no-cache      # Build without cache pulls
+docker build --no-cache --pull never .
+```
+
 
 ## 7. Create Site
 
@@ -153,32 +162,4 @@ scp -r overrides/ user@server:/home/user/frappe/
 ```bash
 docker load -i frappe-images.tar
 ```
-
-3. **Start containers:**
-
-```bash
-cd /home/user/frappe
-docker compose -p frappe -f compose.custom.yaml up -d
-```
-use these options as required 
-
-```
---pull never          # Never pull, use local only
---no-pull             # Skip pull phase entirely
---build no-cache      # Build without cache pulls
-docker build --no-cache --pull never .
-```
-
-4. **Create site:**
-
-```bash
-docker compose -p frappe exec backend bench new-site <sitename> \
-  --mariadb-user-host-login-scope='%' \
-  --db-root-password your_secure_password \
-  --install-app erpnext \
-  --admin-password your_admin_password
-```
-
----
-
-**Done!** Your Frappe bench is running with ERPNext installed.
+3. Follow Steps from D2S [6]

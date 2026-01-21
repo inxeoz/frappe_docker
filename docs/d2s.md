@@ -162,4 +162,4 @@ scp -r overrides/ user@server:/home/user/frappe/
 ```bash
 docker load -i frappe-images.tar
 ```
-3. Follow Steps from D2S [6]
+3. Follow Steps from D2S [6](#6-start-containers)

@@ -169,3 +169,14 @@ scp -r overrides/ user@server:/home/user/frappe/
 docker load -i frappe-images.tar
 ```
 3. Follow Steps from D2S [6](#6-start-containers)
+
+
+### COMMON COMMAND
+
+Restart **all Frappe application workers**
+⚠️ **NOT databases, NOT nginx, NOT Traefik**
+
+```bash
+docker compose -p frappe restart \
+  backend websocket queue-short queue-long scheduler
+```

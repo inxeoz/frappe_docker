@@ -67,6 +67,12 @@ use these options as required
 --build no-cache      # Build without cache pulls
 docker build --no-cache --pull never .
 ```
+use these options to scale
+
+```
+--scale backend=3
+--scale redis-queue=3
+```
 
 
 ## 7. Create Site

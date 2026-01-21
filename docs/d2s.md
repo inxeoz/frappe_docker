@@ -16,6 +16,7 @@ cd frappe_docker
 ```
 
 ## 3. Create Environment File
+> Checkout [Env Var](02-setup/04-env-variables.md)
 
 ```bash
 cp example.env custom.env

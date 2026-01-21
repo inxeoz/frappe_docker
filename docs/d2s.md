@@ -32,6 +32,8 @@ PULL_POLICY=missing
 
 ## 4. Build Image
 
+>> Checkout [Custom apps](02-setup/02-build-setup.md)
+
 ```bash
 docker build \
   --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe \

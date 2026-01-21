@@ -94,7 +94,11 @@ example
 ::1              localhost
 127.0.0.1 SITE_NAME
 ```
-
+another example
+```
+curl -H "Host: witherp" http://127.0.0.1:8100
+```
+if 8100 is running reverse proxy 
 
 ---
 

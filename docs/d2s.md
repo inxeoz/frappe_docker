@@ -66,8 +66,14 @@ docker compose -p frappe -f compose.custom.yaml up -d
 docker compose -p frappe exec backend bench new-site <sitename> \
   --mariadb-user-host-login-scope='%' \
   --db-root-password your_secure_password \
-  --install-app erpnext \
   --admin-password your_admin_password
+```
+if you used apps.json to install custom app like erpnext 
+then use 
+
+```
+  --install-app erpnext
+  --install-app app_name 
 ```
 
 ## 8. Access Site

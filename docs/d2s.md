@@ -50,7 +50,7 @@ docker compose --env-file custom.env -p frappe \
   -f compose.yaml \
   -f overrides/compose.mariadb.yaml \
   -f overrides/compose.redis.yaml \
-  -f overrides/compose.noproxy.yaml \
+  -f overrides/compose.traefik-one.yaml \
   config > compose.custom.yaml
 ```
 

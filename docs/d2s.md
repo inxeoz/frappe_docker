@@ -46,11 +46,11 @@ docker build \
 ## 5. Create Compose File
 
 ```bash
-docker compose --env-file custom.env -p frappe \
+docker compose --env-file envs/alis.env -p frappe \
   -f compose.yaml \
   -f overrides/compose.mariadb.yaml \
   -f overrides/compose.redis.yaml \
-  -f overrides/compose.traefik-one.yaml \
+  -f overrides/compose.traefik.yaml \
   config > compose.custom.yaml
 ```
 

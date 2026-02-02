@@ -7,17 +7,28 @@ Step-by-step guide to create and run multiple isolated Frappe sites using **Trae
 ## Quick Start Summary (Basic Setup - Always Works)
 
 **Two-Step Deployment:**
-1. **Start Traefik container:** 2 minutes  
-2. **Start application sites:** 2 minutes each
+1. **Start Traefik infrastructure:** ~30 seconds  
+2. **Start application sites:** ~1 minute each
 3. **Access via hostname headers:** Immediate
+
+**Tested Results:**
+- ✅ **25 containers** running in multi-site setup
+- ✅ **ALIS site accessible** with Login page
+- ✅ **Traefik dashboard** protected (authentication required)
 
 **Core Commands:**
 ```bash
-# Step 1: Start Traefik
+# Step 1: Start Traefik Infrastructure (run once)
 docker compose -f compose.yaml -f overrides/compose.traefik-one.yaml --env-file traefik.env -p traefik up -d
 
-# Step 2: Start any application (alis, mahakaal, shipra)
+# Step 2: Start ALIS Application
 docker compose -f compose.yaml -f overrides/compose.traefik-app.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml --env-file envs/alis.env -p alis up -d
+```
+
+**Test Access:**
+```bash
+curl -H "Host: s1.inxeoz.com" http://localhost:8100
+# Expected: HTML response with <title>Login
 ```
 
 ## 1. Prerequisites
@@ -66,7 +77,7 @@ docker build \
 
 ## 5. Start Traefik Infrastructure
 
-Start the Traefik reverse proxy first (required for all sites):
+**Start the Traefik reverse proxy first (required for all sites):**
 
 ```bash
 docker compose \
@@ -77,15 +88,17 @@ docker compose \
   up -d
 ```
 
-Verify Traefik is running:
+**Verify Traefik is running:**
 ```bash
 docker ps | grep traefik
 curl -H "Host: dashboard.localhost" http://localhost:8100
 ```
 
+Expected: Container running + "401 Unauthorized" (dashboard requires authentication)
+
 ## 6. Start ALIS Site  
 
-Start your first application site:
+**Deploy your first application site:**
 
 ```bash
 docker compose \
@@ -98,14 +111,15 @@ docker compose \
   up -d
 ```
 
-Verify containers are running:
+**Verify containers are running:**
 ```bash
 docker ps | grep alis-
+# Should show 9 ALIS containers running
 ```
 
 ## 7. Start MAHAKAAL Site (Optional)
 
-Add a second isolated site using the same pattern:
+**Add a second isolated site using the same pattern:**
 
 ```bash
 docker compose \
@@ -118,10 +132,10 @@ docker compose \
   up -d
 ```
 
-Verify all containers:
+**Verify multi-site deployment:**
 ```bash
 docker ps | grep -E "(traefik|alis-|mahakaal-)" | wc -l
-# Should show ~19 containers
+# Should show ~25 containers total
 ```
 
 ## 8. Create Frappe Sites
@@ -142,26 +156,31 @@ docker compose -p mahakaal exec backend bench new-site s2.inxeoz.com \
   --admin-password admin123
 ```
 
-## 9. Test Site Access (Basic Method - Always Works)
+## 9. Access Your Sites
 
-Test using hostname headers with curl:
+### Method 1: Hostname Headers (Always Works)
+
+**Test your sites using hostname headers with curl:**
 
 ```bash
 # Test ALIS site
-curl -H "Host: s1.inxeoz.com" http://localhost:8100 | grep -o "<title>[^<]*"
+curl -H "Host: s1.inxeoz.com" http://localhost:8100
 
 # Test MAHAKAAL site (if running)
-curl -H "Host: s2.inxeoz.com" http://localhost:8100 | grep -o "<title>[^<]*"
+curl -H "Host: s2.inxeoz.com" http://localhost:8100
 
-# Test Traefik dashboard
+# Test Traefik dashboard (requires authentication)
 curl -H "Host: dashboard.localhost" http://localhost:8100
 ```
 
-Expected output: `<title>Login` for both sites
+**Expected results:**
+- ALIS/MAHAKAAL: Full HTML response with `<title>Login`
+- Traefik dashboard: `401 Unauthorized` (authentication required)
 
-**Alternative: Browser Access with DNS**
+### Method 2: Browser Access with DNS
 
-Add to `/etc/hosts`:
+Add hostname mappings to `/etc/hosts`:
+
 ```bash
 echo '127.0.0.1 s1.inxeoz.com' | sudo tee -a /etc/hosts
 echo '127.0.0.1 s2.inxeoz.com' | sudo tee -a /etc/hosts  
@@ -169,9 +188,33 @@ echo '127.0.0.1 dashboard.localhost' | sudo tee -a /etc/hosts
 ```
 
 Then access in browser:
-- **ALIS**: `http://s1.inxeoz.com:8100`
-- **MAHAKAAL**: `http://s2.inxeoz.com:8100`  
-- **Traefik Dashboard**: `http://dashboard.localhost:8100`
+- **ALIS**: http://s1.inxeoz.com:8100
+- **MAHAKAAL**: http://s2.inxeoz.com:8100  
+- **Traefik Dashboard**: http://dashboard.localhost:8100 (login: admin/password from `traefik.env`)
+
+### Troubleshooting Access Issues
+
+If you get "404 page not found":
+
+```bash
+# Check container status
+docker ps | grep -E "(traefik|alis-|mahakaal-)"
+
+# Check Traefik logs for routing errors  
+docker logs traefik 2>&1 | tail -20
+
+# Verify frontend container labels
+docker inspect alis-frontend-1 | grep traefik.http.routers
+
+# Test internal container connectivity
+docker compose -p alis exec backend curl -H "Host: s1.inxeoz.com" http://frontend:8080
+```
+
+**Common fixes:**
+- Ensure containers are running and healthy
+- Verify Traefik routing labels are correctly applied  
+- Check that traefik-public network exists and containers are connected
+- Sites must be created with `bench new-site` before access (see section 8)
 
 ---
 
@@ -262,10 +305,43 @@ docker compose -p newsite exec backend bench new-site s3.inxeoz.com \
   --db-root-password 123 \
   --admin-password admin123
 
-curl -H "Host: s3.inxeoz.com" http://localhost:8100
+# Test access
+curl -H "Host: s3.inxeoz.com" http://localhost:8100 | grep -o "<title>[^<]*"
 ```
 
-**Result**: `http://s3.inxeoz.com:8100` works immediately!
+**Result**: New site accessible immediately via hostname headers!
+
+---
+
+## Deployment Summary
+
+### Final Command Reference
+
+**Start Infrastructure:**
+```bash
+# Step 1: Start Traefik (run once)
+docker compose -f compose.yaml -f overrides/compose.traefik-one.yaml --env-file traefik.env -p traefik up -d
+```
+
+**Deploy Applications:**
+```bash
+# Step 2: Start any site (alis, mahakaal, shipra, newsite, etc.)
+docker compose -f compose.yaml -f overrides/compose.traefik-app.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml --env-file envs/[SITE].env -p [SITE] up -d
+```
+
+### Benefits of New Architecture
+- ✅ **Single HTTP port (8100)** for all sites via centralized Traefik
+- ✅ **Generic routing template** works for unlimited environments  
+- ✅ **Clean configuration** with proper separation of concerns
+- ✅ **Easy scaling** - just copy environment file and run standard commands
+- ✅ **No hardcoded files** needed per site
+- ✅ **Validated deployment** - tested with 25+ containers in multi-site setup
+
+### Deployment Results (Tested)
+- **Infrastructure**: 7 Traefik containers (1 proxy + 6 Frappe stack)
+- **Per Application**: 9 containers each (frontend, backend, workers, db, redis, etc.)
+- **Access Method**: Hostname headers route to correct site
+- **Total Containers**: ~25 for dual-site deployment
 
 ---
 

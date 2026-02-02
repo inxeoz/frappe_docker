@@ -50,7 +50,7 @@ docker compose --env-file envs/alis.env -p frappe \
   -f compose.yaml \
   -f overrides/compose.mariadb.yaml \
   -f overrides/compose.redis.yaml \
-  -f overrides/compose.traefik-one.yaml \
+  -f overrides/compose.traefik-app.yaml \
   config > compose/alis.yaml
 ```
 

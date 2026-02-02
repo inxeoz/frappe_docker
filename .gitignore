@@ -31,3 +31,4 @@ node_modules
 
 # tar file of docker images
 *.tar
+*.tar.gz

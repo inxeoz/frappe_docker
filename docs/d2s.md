@@ -57,7 +57,7 @@ docker compose --env-file envs/alis.env -p frappe \
 ## 6. Start Containers
 
 ```bash
-docker compose -p frappe -f compose.custom.yaml up -d
+docker compose -p frappe -f compose/alis.yaml up -d
 ```
 use these options as required 
 

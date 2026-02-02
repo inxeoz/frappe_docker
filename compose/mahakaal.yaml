@@ -1,4 +1,4 @@
-name: mahakaal
+name: frappe
 services:
   backend:
     depends_on:
@@ -101,10 +101,11 @@ services:
     labels:
       traefik.docker.network: traefik-public
       traefik.enable: "true"
-      traefik.http.routers.$${STACK_NAME}.entrypoints: web
-      traefik.http.routers.$${STACK_NAME}.rule: Host(`s2.inxeoz.com`)
-      traefik.http.services.$${STACK_NAME}.loadbalancer.server.port: "8080"
+      traefik.http.routers.frontend.entrypoints: web
+      traefik.http.routers.frontend.rule: Host(`s2.inxeoz.com`)
+      traefik.http.services.frontend.loadbalancer.server.port: "8080"
     networks:
+      default: null
       traefik-public: null
     platform: linux/amd64
     pull_policy: missing
@@ -211,17 +212,17 @@ services:
         volume: {}
 networks:
   default:
-    name: mahakaal_default
+    name: frappe_default
   traefik-public:
     name: traefik-public
     external: true
 volumes:
   db-data:
-    name: mahakaal_db-data
+    name: frappe_db-data
   redis-queue-data:
-    name: mahakaal_redis-queue-data
+    name: frappe_redis-queue-data
   sites:
-    name: mahakaal_sites
+    name: frappe_sites
 x-backend-defaults:
   depends_on:
     configurator:

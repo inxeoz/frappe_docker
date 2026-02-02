@@ -2,6 +2,7 @@ services:
   frontend:
     networks:
       - traefik-public
+      - default
     labels:
       traefik.enable: "true"
       traefik.docker.network: traefik-public

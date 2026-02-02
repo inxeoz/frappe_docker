@@ -106,6 +106,7 @@ services:
       traefik.http.services.frontend.loadbalancer.server.port: "8080"
     networks:
       traefik-public: null
+      default: null
     platform: linux/amd64
     pull_policy: missing
     restart: unless-stopped

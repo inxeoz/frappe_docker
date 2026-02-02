@@ -50,8 +50,8 @@ docker compose --env-file envs/alis.env -p frappe \
   -f compose.yaml \
   -f overrides/compose.mariadb.yaml \
   -f overrides/compose.redis.yaml \
-  -f overrides/compose.traefik.yaml \
-  config > compose.custom.yaml
+  -f overrides/compose.traefik-one.yaml \
+  config > compose/alis.yaml
 ```
 
 ## 6. Start Containers

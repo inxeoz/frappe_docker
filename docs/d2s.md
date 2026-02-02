@@ -2,23 +2,29 @@
 
 Step-by-step guide to create and run multiple isolated Frappe sites using **Traefik reverse proxy**.
 
-**Tested Architecture: `[Traefik :8100] → [Isolated Sites]` + Optional: `[Nginx :89] → [Traefik :8100]`**
+**Tested Architecture: `[Traefik :8100] → [Isolated Sites]`**
 
-## Quick Start Summary
+## Quick Start Summary (Basic Setup - Always Works)
 
-**Core Setup (Always Works):**
-1. Start ALIS site with Traefik: **5 minutes**
-2. Start MAHAKAAL site: **2 minutes**  
-3. Access via hostname headers: **Immediate**
+**Two-Step Deployment:**
+1. **Start Traefik container:** 2 minutes  
+2. **Start application sites:** 2 minutes each
+3. **Access via hostname headers:** Immediate
 
-**Optional nginx proxy:** For clean URLs (may need troubleshooting)
+**Core Commands:**
+```bash
+# Step 1: Start Traefik
+docker compose -f compose.yaml -f overrides/compose.traefik-one.yaml --env-file traefik.env -p traefik up -d
+
+# Step 2: Start any application (alis, mahakaal, shipra)
+docker compose -f compose.yaml -f overrides/compose.traefik-app.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml --env-file envs/alis.env -p alis up -d
+```
 
 ## 1. Prerequisites
 
 - git
 - Docker or Podman  
 - Docker Compose v2
-- nginx (optional - only for clean URLs on port 89)
 
 ## 2. Clone Repository
 
@@ -27,40 +33,26 @@ git clone https://github.com/frappe/frappe_docker
 cd frappe_docker
 ```
 
-## 3. Verify Environment Files (Pre-configured)
+## 3. Verify Configuration Files (Pre-configured)
 
-The repository comes with pre-configured environment files:
+The repository comes with centralized Traefik configuration and clean environment files:
 
 ```bash
-# Check ALIS configuration
-cat envs/alis.env | grep -E "(SITE_HOST|TRAEFIK_DOMAIN|HTTP_PUBLISH_PORT)"
+# Check Traefik infrastructure configuration
+cat traefik.env | grep -E "(HTTP_PUBLISH_PORT|TRAEFIK_DOMAIN)"
 
-# Check MAHAKAAL configuration  
-cat envs/mahakaal.env | grep -E "(SITE_HOST|TRAEFIK_DOMAIN|HTTP_PUBLISH_PORT)"
+# Check application configurations
+cat envs/alis.env | grep -E "(SITE_HOST|APP_NAME)"
+cat envs/mahakaal.env | grep -E "(SITE_HOST|APP_NAME)" 
 ```
 
 Expected output:
-- `SITE_HOST=s1.inxeoz.com` (ALIS)
-- `SITE_HOST=s2.inxeoz.com` (MAHAKAAL)
-- `TRAEFIK_DOMAIN=dashboard.localhost`
-- `HTTP_PUBLISH_PORT=8100`
+- `HTTP_PUBLISH_PORT=8100` (in traefik.env)
+- `TRAEFIK_DOMAIN=dashboard.localhost` (in traefik.env) 
+- `SITE_HOST=s1.inxeoz.com APP_NAME=alis` (in alis.env)
+- `SITE_HOST=s2.inxeoz.com APP_NAME=mahakaal` (in mahakaal.env)
 
-## 4. Verify Traefik Frontend Configurations
-
-Check that routing configurations exist:
-
-```bash
-# Should show two YAML files
-ls -la traefik_frontends/
-cat traefik_frontends/traefik-alis.yaml | grep "Host("
-cat traefik_frontends/traefik-mahakaal.yaml | grep "Host("
-```
-
-Expected output:
-- `traefik-alis.yaml`: Host(`s1.inxeoz.com`)
-- `traefik-mahakaal.yaml`: Host(`s2.inxeoz.com`)
-
-## 5. Build Custom Image (If Needed)
+## 4. Build Custom Image (If Needed)
 
 > Checkout [Custom apps](02-setup/02-build-setup.md)
 
@@ -72,15 +64,33 @@ docker build \
   --file=images/layered/Containerfile .
 ```
 
-## 6. Start ALIS Site (with Traefik)
+## 5. Start Traefik Infrastructure
 
-This starts Traefik + complete ALIS stack:
+Start the Traefik reverse proxy first (required for all sites):
 
 ```bash
 docker compose \
   -f compose.yaml \
   -f overrides/compose.traefik-one.yaml \
-  -f traefik_frontends/traefik-alis.yaml \
+  --env-file traefik.env \
+  -p traefik \
+  up -d
+```
+
+Verify Traefik is running:
+```bash
+docker ps | grep traefik
+curl -H "Host: dashboard.localhost" http://localhost:8100
+```
+
+## 6. Start ALIS Site  
+
+Start your first application site:
+
+```bash
+docker compose \
+  -f compose.yaml \
+  -f overrides/compose.traefik-app.yaml \
   -f overrides/compose.mariadb.yaml \
   -f overrides/compose.redis.yaml \
   --env-file envs/alis.env \
@@ -90,17 +100,17 @@ docker compose \
 
 Verify containers are running:
 ```bash
-docker ps | grep -E "(traefik|alis-)"
+docker ps | grep alis-
 ```
 
-## 7. Start MAHAKAAL Site
+## 7. Start MAHAKAAL Site (Optional)
 
-This adds the second isolated site:
+Add a second isolated site using the same pattern:
 
 ```bash
 docker compose \
   -f compose.yaml \
-  -f traefik_frontends/traefik-mahakaal.yaml \
+  -f overrides/compose.traefik-app.yaml \
   -f overrides/compose.mariadb.yaml \
   -f overrides/compose.redis.yaml \
   --env-file envs/mahakaal.env \
@@ -124,7 +134,7 @@ docker compose -p alis exec backend bench new-site s1.inxeoz.com \
   --admin-password admin123
 ```
 
-Create MAHAKAAL site:
+Create MAHAKAAL site (if running):
 ```bash
 docker compose -p mahakaal exec backend bench new-site s2.inxeoz.com \
   --mariadb-user-host-login-scope='%' \
@@ -132,15 +142,15 @@ docker compose -p mahakaal exec backend bench new-site s2.inxeoz.com \
   --admin-password admin123
 ```
 
-## 9. Test Site Access
+## 9. Test Site Access (Basic Method - Always Works)
 
-**Method 1: Direct Traefik Access (Always Works)**
+Test using hostname headers with curl:
 
 ```bash
 # Test ALIS site
 curl -H "Host: s1.inxeoz.com" http://localhost:8100 | grep -o "<title>[^<]*"
 
-# Test MAHAKAAL site  
+# Test MAHAKAAL site (if running)
 curl -H "Host: s2.inxeoz.com" http://localhost:8100 | grep -o "<title>[^<]*"
 
 # Test Traefik dashboard
@@ -149,7 +159,7 @@ curl -H "Host: dashboard.localhost" http://localhost:8100
 
 Expected output: `<title>Login` for both sites
 
-**Method 2: Browser Access with DNS**
+**Alternative: Browser Access with DNS**
 
 Add to `/etc/hosts`:
 ```bash
@@ -165,21 +175,25 @@ Then access in browser:
 
 ---
 
-## 🎉 Core Setup Complete!
+## 🎉 Basic Setup Complete!
 
 At this point you have:
-- ✅ **2 completely isolated Frappe sites**
-- ✅ **Auto-discovery routing via Traefik**
-- ✅ **Separate databases and Redis per site**
-- ✅ **Working login pages for both sites**
+- ✅ **Multiple isolated Frappe sites running**
+- ✅ **Centralized Traefik reverse proxy**  
+- ✅ **Clean environment configuration**
+- ✅ **Working login pages accessible via hostname headers**
 
-The remaining sections are **optional enhancements**.
+The remaining sections cover optional enhancements and advanced configurations.
 
 ---
 
-## Optional: nginx Proxy for Clean URLs
+## Optional Configuration (Advanced)
 
-If you want URLs without port numbers (`http://s1.inxeoz.com:89`), set up nginx:
+The sections below are **optional** and may require troubleshooting. The basic setup above always works.
+
+## nginx Reverse Proxy (For Clean URLs)
+
+If you want to access sites as `http://s1.inxeoz.com:89` instead of using hostname headers:
 
 ### Setup nginx Proxy
 
@@ -221,39 +235,19 @@ sudo nginx -c /tmp/nginx-standalone.conf
 
 ## Adding More Sites (Unlimited Scalability)
 
-The architecture supports unlimited sites with **zero configuration changes**:
+The standardized architecture supports unlimited sites with **minimal configuration**:
 
 ### 1. Create new environment file
 ```bash
 cp envs/alis.env envs/newsite.env
-# Edit SITE_HOST=s3.inxeoz.com
+# Edit: SITE_HOST=s3.inxeoz.com and APP_NAME=newsite
 ```
 
-### 2. Create Traefik routing
-Create `traefik_frontends/traefik-newsite.yaml`:
-```yaml
-services:
-  frontend:
-    networks:
-      - traefik-public
-      - default
-    labels:
-      traefik.enable: "true"
-      traefik.docker.network: "traefik-public"
-      traefik.http.routers.newsite-frontend.rule: "Host(`s3.inxeoz.com`)"
-      traefik.http.routers.newsite-frontend.entrypoints: "web"
-      traefik.http.services.newsite-frontend.loadbalancer.server.port: "8080"
-
-networks:
-  traefik-public:
-    external: true
-```
-
-### 3. Start new site
+### 2. Start new site (no additional files needed!)
 ```bash
 docker compose \
   -f compose.yaml \
-  -f traefik_frontends/traefik-newsite.yaml \
+  -f overrides/compose.traefik-app.yaml \
   -f overrides/compose.mariadb.yaml \
   -f overrides/compose.redis.yaml \
   --env-file envs/newsite.env \
@@ -261,7 +255,7 @@ docker compose \
   up -d
 ```
 
-### 4. Create site and test
+### 3. Create site and test
 ```bash
 docker compose -p newsite exec backend bench new-site s3.inxeoz.com \
   --mariadb-user-host-login-scope='%' \

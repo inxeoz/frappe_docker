@@ -5,10 +5,10 @@ services:
       - default
     labels:
       traefik.enable: "true"
-      traefik.docker.network: traefik-public
-      traefik.http.routers.frontend.rule: Host(`${SITE_HOST}`)
-      traefik.http.routers.frontend.entrypoints: web
-      traefik.http.services.frontend.loadbalancer.server.port: "8080"
+      traefik.docker.network: "traefik-public"
+      traefik.http.routers.${APP_NAME}-frontend.rule: "Host(`${SITE_HOST}`)"
+      traefik.http.routers.${APP_NAME}-frontend.entrypoints: "web"
+      traefik.http.services.${APP_NAME}-frontend.loadbalancer.server.port: "8080"
 
 networks:
   traefik-public:

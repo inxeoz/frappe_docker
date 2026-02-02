@@ -1,0 +1,12 @@
+[
+  {
+    "name": "erpnext",
+    "url": "https://github.com/frappe/erpnext.git",
+    "branch": "version-15"
+  },
+  {
+    "name": "alisapp",
+    "url": "https://github.com/inxeoz-org/alisapp.git",
+    "branch": "develop"
+  }
+]

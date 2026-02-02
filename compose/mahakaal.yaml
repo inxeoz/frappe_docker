@@ -1,4 +1,4 @@
-name: frappe
+name: mahakaal
 services:
   backend:
     depends_on:
@@ -101,11 +101,10 @@ services:
     labels:
       traefik.docker.network: traefik-public
       traefik.enable: "true"
-      traefik.http.routers.frappe.entrypoints: web
-      traefik.http.routers.frappe.rule: HostRegexp(`{site:.+}`)
-      traefik.http.services.frappe.loadbalancer.server.port: "8080"
+      traefik.http.routers.$${STACK_NAME}.entrypoints: web
+      traefik.http.routers.$${STACK_NAME}.rule: Host(`s2.inxeoz.com`)
+      traefik.http.services.$${STACK_NAME}.loadbalancer.server.port: "8080"
     networks:
-      default: null
       traefik-public: null
     platform: linux/amd64
     pull_policy: missing
@@ -191,38 +190,6 @@ services:
         source: sites
         target: /home/frappe/frappe-bench/sites
         volume: {}
-  traefik:
-    command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --api.dashboard=true
-      - --api.insecure=false
-      - --accesslog=true
-      - --log.level=INFO
-    container_name: traefik
-    image: traefik:v2.11
-    labels:
-      traefik.enable: "true"
-      traefik.http.middlewares.dashboard-auth.basicauth.users: admin:$$2a$$12$$8htSjwtTDj8qm6P7d0LsfuUg/d0l39L/6m7mYNdO2vu6e9aY.rcfW
-      traefik.http.routers.traefik.entrypoints: web
-      traefik.http.routers.traefik.middlewares: dashboard-auth
-      traefik.http.routers.traefik.rule: Host(`dashboard.localhost`)
-      traefik.http.routers.traefik.service: api@internal
-    networks:
-      traefik-public: null
-    ports:
-      - mode: ingress
-        target: 80
-        published: "8100"
-        protocol: tcp
-    restart: unless-stopped
-    volumes:
-      - type: bind
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-        read_only: true
-        bind: {}
   websocket:
     command:
       - node
@@ -244,17 +211,17 @@ services:
         volume: {}
 networks:
   default:
-    name: frappe_default
+    name: mahakaal_default
   traefik-public:
     name: traefik-public
-    driver: bridge
+    external: true
 volumes:
   db-data:
-    name: frappe_db-data
+    name: mahakaal_db-data
   redis-queue-data:
-    name: frappe_redis-queue-data
+    name: mahakaal_redis-queue-data
   sites:
-    name: frappe_sites
+    name: mahakaal_sites
 x-backend-defaults:
   depends_on:
     configurator:

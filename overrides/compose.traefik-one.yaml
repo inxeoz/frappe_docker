@@ -30,17 +30,6 @@ services:
       - traefik.http.routers.traefik.middlewares=dashboard-auth
       - traefik.http.middlewares.dashboard-auth.basicauth.users=admin:${HASHED_PASSWORD}
 
-  frontend:
-    networks:
-      - default
-      - traefik-public
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.frappe.rule=HostRegexp(`{site:.+}`)
-      - traefik.http.routers.frappe.entrypoints=web
-      - traefik.http.services.frappe.loadbalancer.server.port=8080
-      - traefik.docker.network=traefik-public
-
 networks:
   traefik-public:
     name: traefik-public

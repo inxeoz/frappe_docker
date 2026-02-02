@@ -230,6 +230,218 @@ The remaining sections cover optional enhancements and advanced configurations.
 
 ---
 
+## Server Deployment (Production)
+
+For production server deployment, you can export Docker images as tar files and transfer them to your server. This enables offline deployment and ensures version consistency.
+
+### 1. Export Docker Images to Tar Files
+
+**Export all required images:**
+
+```bash
+# Create images directory
+mkdir -p frappe-images
+
+# Export Traefik image
+docker save traefik:v2.11 | gzip > frappe-images/traefik-v2.11.tar.gz
+
+# Export custom Frappe image  
+docker save custom:15 | gzip > frappe-images/custom-15.tar.gz
+
+# Export database images
+docker save mariadb:11.8 | gzip > frappe-images/mariadb-11.8.tar.gz
+
+# Export Redis images
+docker save redis:6.2-alpine | gzip > frappe-images/redis-6.2-alpine.tar.gz
+
+# Create single archive (optional)
+tar czf frappe-docker-images.tar.gz frappe-images/
+
+echo "✅ Images exported successfully!"
+ls -lh frappe-images/
+```
+
+### 2. Prepare Deployment Package
+
+**Package all necessary files:**
+
+```bash
+# Create deployment package
+mkdir -p frappe-deployment
+
+# Copy essential files
+cp -r envs/ frappe-deployment/
+cp -r overrides/ frappe-deployment/
+cp -r compose/ frappe-deployment/
+cp traefik.env frappe-deployment/
+cp compose.yaml frappe-deployment/
+cp -r docs/ frappe-deployment/
+
+# Include images
+mv frappe-images/ frappe-deployment/
+
+# Create final package
+tar czf frappe-deployment-package.tar.gz frappe-deployment/
+
+echo "📦 Deployment package ready: frappe-deployment-package.tar.gz"
+ls -lh frappe-deployment-package.tar.gz
+```
+
+### 3. Transfer to Server
+
+**Copy to your production server:**
+
+```bash
+# Transfer via SCP
+scp frappe-deployment-package.tar.gz user@your-server:/home/user/
+
+# Or transfer individual components
+rsync -avz frappe-deployment/ user@your-server:/home/user/frappe-docker/
+```
+
+### 4. Server Setup
+
+**On your production server:**
+
+```bash
+# Extract deployment package
+tar xzf frappe-deployment-package.tar.gz
+cd frappe-deployment/
+
+# Load Docker images
+docker load < frappe-images/traefik-v2.11.tar.gz
+docker load < frappe-images/custom-15.tar.gz  
+docker load < frappe-images/mariadb-11.8.tar.gz
+docker load < frappe-images/redis-6.2-alpine.tar.gz
+
+# Verify images loaded
+docker images | grep -E "(traefik|custom|mariadb|redis)"
+
+echo "✅ Images loaded successfully!"
+```
+
+### 5. Deploy on Server
+
+**Execute the same two-step deployment:**
+
+```bash
+# Step 1: Start Traefik Infrastructure
+docker compose -f compose.yaml -f overrides/compose.traefik-one.yaml --env-file traefik.env -p traefik up -d
+
+# Step 2: Start ALIS Application  
+docker compose -f compose.yaml -f overrides/compose.traefik-app.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml --env-file envs/alis.env -p alis up -d
+
+# Verify deployment
+docker ps | grep -E "(traefik|alis)" | wc -l
+# Should show ~16 containers
+```
+
+### 6. Server Access Configuration
+
+**Update server domains (replace with your server IP):**
+
+```bash
+# On your local machine, add server IP to /etc/hosts
+echo 'YOUR_SERVER_IP s1.inxeoz.com' | sudo tee -a /etc/hosts
+echo 'YOUR_SERVER_IP dashboard.localhost' | sudo tee -a /etc/hosts
+
+# Test server access
+curl -H "Host: s1.inxeoz.com" http://YOUR_SERVER_IP:8100
+curl -H "Host: dashboard.localhost" http://YOUR_SERVER_IP:8100
+```
+
+### Benefits of Image Export Method
+
+- ✅ **Offline Deployment**: No internet required on production server
+- ✅ **Version Consistency**: Exact same images across environments  
+- ✅ **Faster Deployment**: No time spent downloading images
+- ✅ **Air-gapped Support**: Works in secure/isolated environments
+- ✅ **Bandwidth Efficient**: One-time transfer vs multiple downloads
+
+### Automation Script (Optional)
+
+**Create automated deployment script:**
+
+```bash
+# Create export script
+cat > export-for-server.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "🚀 Preparing Frappe Docker for server deployment..."
+
+# Create directories
+mkdir -p frappe-images frappe-deployment
+
+# Export Docker images
+echo "📦 Exporting Docker images..."
+docker save traefik:v2.11 | gzip > frappe-images/traefik-v2.11.tar.gz
+docker save custom:15 | gzip > frappe-images/custom-15.tar.gz
+docker save mariadb:11.8 | gzip > frappe-images/mariadb-11.8.tar.gz
+docker save redis:6.2-alpine | gzip > frappe-images/redis-6.2-alpine.tar.gz
+
+# Package files
+echo "📁 Packaging deployment files..."
+cp -r envs/ overrides/ compose/ traefik.env compose.yaml docs/ frappe-deployment/
+mv frappe-images/ frappe-deployment/
+
+# Create final package
+tar czf frappe-deployment-package.tar.gz frappe-deployment/
+rm -rf frappe-deployment/
+
+echo "✅ Deployment package ready!"
+ls -lh frappe-deployment-package.tar.gz
+echo "🚀 Transfer this file to your server and extract it."
+EOF
+
+chmod +x export-for-server.sh
+```
+
+**Run the script:**
+```bash
+./export-for-server.sh
+```
+
+**Create server setup script:**
+
+```bash
+# Create server-side script (run on server after transfer)
+cat > setup-on-server.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "🚀 Setting up Frappe Docker on server..."
+
+# Extract package
+if [ -f "frappe-deployment-package.tar.gz" ]; then
+    tar xzf frappe-deployment-package.tar.gz
+    cd frappe-deployment/
+else
+    echo "❌ frappe-deployment-package.tar.gz not found!"
+    exit 1
+fi
+
+# Load images
+echo "📦 Loading Docker images..."
+docker load < frappe-images/traefik-v2.11.tar.gz
+docker load < frappe-images/custom-15.tar.gz
+docker load < frappe-images/mariadb-11.8.tar.gz
+docker load < frappe-images/redis-6.2-alpine.tar.gz
+
+# Deploy
+echo "🚀 Starting deployment..."
+docker compose -f compose.yaml -f overrides/compose.traefik-one.yaml --env-file traefik.env -p traefik up -d
+sleep 10
+docker compose -f compose.yaml -f overrides/compose.traefik-app.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml --env-file envs/alis.env -p alis up -d
+
+echo "✅ Deployment complete!"
+docker ps | grep -E "(traefik|alis)" | wc -l
+echo "containers running"
+EOF
+```
+
+---
+
 ## Optional Configuration (Advanced)
 
 The sections below are **optional** and may require troubleshooting. The basic setup above always works.

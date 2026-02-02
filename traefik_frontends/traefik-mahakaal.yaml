@@ -1,0 +1,15 @@
+services:
+  frontend:
+    networks:
+      - traefik-public
+      - default
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "traefik-public"
+      traefik.http.routers.mahakaal-frontend.rule: "Host(`s2.inxeoz.com`)"
+      traefik.http.routers.mahakaal-frontend.entrypoints: "web"
+      traefik.http.services.mahakaal-frontend.loadbalancer.server.port: "8080"
+
+networks:
+  traefik-public:
+    external: true

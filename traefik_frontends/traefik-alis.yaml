@@ -1,0 +1,15 @@
+services:
+  frontend:
+    networks:
+      - traefik-public
+      - default
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "traefik-public"
+      traefik.http.routers.alis-frontend.rule: "Host(`s1.inxeoz.com`)"
+      traefik.http.routers.alis-frontend.entrypoints: "web"
+      traefik.http.services.alis-frontend.loadbalancer.server.port: "8080"
+
+networks:
+  traefik-public:
+    external: true

@@ -81,10 +81,8 @@ docker build \
 
 ```bash
 docker compose \
-  -f compose.yaml \
   -f overrides/compose.traefik-one.yaml \
   --env-file traefik.env \
-  -p traefik \
   up -d
 ```
 

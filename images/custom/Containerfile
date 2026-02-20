@@ -25,6 +25,8 @@ RUN useradd -ms /bin/bash frappe \
     libharfbuzz0b \
     libpangoft2-1.0-0 \
     libpangocairo-1.0-0 \
+    #Chromium
+    chromium-headless-shell \
     # For backups
     restic \
     gpg \
